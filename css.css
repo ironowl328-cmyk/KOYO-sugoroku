@@ -1,0 +1,434 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+h2 {
+  font-size: 1.5rem;
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 480px) {
+  .input-group {
+    flex-direction: row;
+  }
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 1.1rem;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+}
+
+input[type="text"]:focus {
+  border-color: #007bff;
+}
+
+button {
+  padding: 14px 20px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+button:active {
+  background-color: #0056b3;
+}
+
+button:disabled {
+  background-color: #ccc !important;
+  background-image: none !important;
+  cursor: not-allowed;
+}
+
+.start-btn {
+  background-color: #28a745;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.start-btn:active {
+  background-color: #1e7e34;
+}
+
+.clear-btn {
+  background-color: #6c757d;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.clear-btn:active {
+  background-color: #545b62;
+}
+
+.message {
+  color: #d9534f;
+  font-size: 1rem;
+  font-weight: bold;
+  min-height: 24px;
+  margin-bottom: 12px;
+}
+
+h3 {
+  font-size: 1.2rem;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 8px;
+  margin-top: 24px;
+}
+
+ol, ul {
+  padding-left: 28px;
+  margin: 0;
+}
+
+li {
+  font-size: 1.1rem;
+  font-weight: bold;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+  word-break: break-all;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.current-player {
+  font-size: 1.3rem;
+  text-align: center;
+  margin-bottom: 16px;
+  background-color: #e9ecef;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.turn-badge {
+  display: block;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 4px;
+}
+
+/* 部活選択ラジオボタン */
+.club-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.club-option-label {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.club-option-label:hover {
+  background-color: #f0f7ff;
+  border-color: #007bff;
+}
+
+.club-option-label input[type="radio"] {
+  margin-right: 12px;
+  width: 18px;
+  height: 18px;
+  accent-color: #007bff;
+}
+
+/* パラメーター表示 */
+.status-container {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.status-item {
+  margin-bottom: 16px;
+}
+
+.status-item:last-child {
+  margin-bottom: 0;
+}
+
+.status-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+}
+
+/* 手動ポイント調整ボタン */
+.point-ctrl-btns {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.ctrl-btn {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+}
+
+.ctrl-btn-plus {
+  background-color: #28a745;
+}
+
+.ctrl-btn-plus:active {
+  background-color: #1e7e34;
+}
+
+.ctrl-btn-minus {
+  background-color: #dc3545;
+}
+
+.ctrl-btn-minus:active {
+  background-color: #bd2130;
+}
+
+.progress-bar-bg {
+  width: 100%;
+  height: 16px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-bar-fill.affection {
+  background-color: #ff9800;
+}
+
+.progress-bar-fill.study {
+  background-color: #28a745;
+}
+
+/* サイコロエリア */
+.dice-area {
+  text-align: center;
+  margin: 20px 0 10px 0;
+}
+
+.dice-box {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  font-size: 3rem;
+  font-weight: bold;
+  color: #333;
+  background-color: #ffffff;
+  border: 4px solid #333;
+  border-radius: 16px;
+  box-shadow: 0 6px 0 #333;
+  margin-bottom: 16px;
+}
+
+.roll-btn {
+  width: 100%;
+  background-color: #ff9800;
+  font-size: 1.3rem;
+}
+
+.roll-btn:active {
+  background-color: #e68a00;
+}
+
+/* ゴールボタン */
+.goal-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+  color: #5a3d00;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-size: 1.3rem;
+  margin-top: 10px;
+  box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
+  border: 1px solid #e6b800;
+}
+
+.goal-btn:active {
+  background: linear-gradient(135deg, #e6c200 0%, #e69500 100%);
+}
+
+/* 留年ボタン (濃い緑色) */
+.repeat-btn {
+  width: 100%;
+  background-color: #145a32;
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-top: 10px;
+  border: 1px solid #0e3d22;
+  box-shadow: 0 4px 10px rgba(20, 90, 50, 0.3);
+}
+
+.repeat-btn:hover {
+  background-color: #0e3d22;
+}
+
+.repeat-btn:active {
+  background-color: #092716;
+}
+
+/* 退部ボタン (暗い赤/えんじ色) */
+.leave-club-btn {
+  width: 100%;
+  background-color: #721c24;
+  color: #ffffff;
+  font-size: 1.2rem;
+  margin-top: 10px;
+  border: 1px solid #491217;
+  box-shadow: 0 4px 10px rgba(114, 28, 36, 0.3);
+}
+
+.leave-club-btn:hover {
+  background-color: #491217;
+}
+
+.leave-club-btn:active {
+  background-color: #2c0b0e;
+}
+
+.dice-result-msg {
+  font-size: 1.05rem;
+  font-weight: bold;
+  color: #007bff;
+  margin-top: 12px;
+  min-height: 54px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* モーダル共通スタイル */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #ffffff;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.quiz-question {
+  font-size: 1.15rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-option-btn {
+  background-color: #f8f9fa;
+  color: #333;
+  border: 2px solid #007bff;
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.quiz-option-btn:hover {
+  background-color: #e7f1ff;
+}
+
+/* 最終結果発表用 */
+.winner-title {
+  text-align: center;
+  color: #d97706;
+  font-size: 1.6rem;
+  margin-bottom: 10px;
+}
+
+.winner-name {
+  text-align: center;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #28a745;
+  margin-bottom: 16px;
+}
+
+.final-score-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.final-score-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 1.05rem;
+}
