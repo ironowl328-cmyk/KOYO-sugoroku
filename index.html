@@ -454,7 +454,7 @@
           </div>
         </div>
 
-        <!-- 学力ポイント -->
+        <!-- 学力ポイント（上限なし） -->
         <div class="status-item">
           <div class="status-label">
             <div>
@@ -464,7 +464,7 @@
                 <button type="button" class="ctrl-btn ctrl-btn-minus" id="studyMinusBtn">-5</button>
               </span>
             </div>
-            <span id="studyVal">0 / 100</span>
+            <span id="studyVal">0 pt</span>
           </div>
           <div class="progress-bar-bg">
             <div id="studyBar" class="progress-bar-fill study" style="width: 0%;"></div>
@@ -520,7 +520,6 @@
       'クイズ研究会'
     ];
 
-    // 高難易度クイズに更新
     const quizQuestions = [
       { q: "19世紀末に国際単位系で『メートル』の定義に用いられた『メートル原器』の材質は？", options: ["白金・イリジウム合金", "チタン・アルミニウム合金", "タングステン銅", "炭素鋼"], answer: 0 },
       { q: "元素周期表において、唯一人名でも地名でもなく『神話の神』に直接由来しない名の人工元素は？", options: ["プロメチウム", "チタン", "ニホニウム", "テクネチウム"], answer: 3 },
@@ -536,6 +535,7 @@
     let globalTurnCount = 1;
     let isRolling = false;
     let goalCounter = 0;
+    let lastQuizIndex = -1;
 
     const MAX_PLAYERS = 6;
     const MIN_PLAYERS = 2;
@@ -694,10 +694,10 @@
       const curPlayer = players[currentStepIndex];
       curPlayer.club = selectedClub;
 
-      // 初期パラメーター加算
       if (selectedClub === '管弦楽・軽音楽部・ジャズオケ部') {
         curPlayer.affection = Math.min(curPlayer.maxAffection, curPlayer.affection + 10);
       } else if (selectedClub === 'クイズ研究会') {
+        // 部活決定時の学力変動（退部状態ではないので通常通り）
         curPlayer.study += 10;
       }
 
@@ -709,7 +709,7 @@
         step2.classList.add('hidden');
         step3.classList.remove('hidden');
         playerTurnIndex = 0;
-        globalTurnCount = 2; // 部活決定後は第2ターンを開始
+        globalTurnCount = 2;
         isRolling = false;
         
         setButtonsState(!players[playerTurnIndex].isGoal);
@@ -718,6 +718,21 @@
         updateDiceTurnView();
         renderResultList();
       }
+    }
+
+    // --- ポイント変更共通関数（退部状態の補正をここに適用） ---
+    function addStudyPoint(player, amount) {
+      let finalAmount = amount;
+      let extraMsg = "";
+
+      // 退部状態（'未所属（退部済）'）のときに学力ポイントが上下（変動）する場合
+      if (player.club === '未所属（退部済）' && amount !== 0) {
+        finalAmount += 10;
+        extraMsg = "（退部ボーナス 学力+10）";
+      }
+
+      player.study = Math.max(0, player.study + finalAmount);
+      return extraMsg;
     }
 
     // --- ポイント手動変更イベント ---
@@ -732,10 +747,39 @@
       if (type === 'affection') {
         p.affection = Math.min(p.maxAffection, Math.max(0, p.affection + amount));
       } else {
-        p.study = Math.max(0, p.study + amount);
+        const extraMsg = addStudyPoint(p, amount);
+        if (extraMsg && diceResultMsg) {
+          diceResultMsg.innerHTML = `<span style="color: #721c24;">${extraMsg}</span>`;
+        }
       }
       updateDiceTurnView();
       renderResultList();
+    }
+
+    // --- 好感度に応じたサイコロの出目決定 ---
+    function rollWeightedDice(affection, maxAffection) {
+      const ratio = maxAffection > 0 ? affection / maxAffection : 0;
+      const bonusForHigh = ratio * 2;
+      
+      const weights = [
+        1, 
+        1, 
+        1, 
+        1 + bonusForHigh, 
+        1 + bonusForHigh * 1.5, 
+        1 + bonusForHigh * 2
+      ];
+
+      const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+      let randomVal = Math.random() * totalWeight;
+
+      for (let i = 0; i < weights.length; i++) {
+        if (randomVal < weights[i]) {
+          return i + 1;
+        }
+        randomVal -= weights[i];
+      }
+      return 6;
     }
 
     // --- STEP 3: サイコロ & 部活効果計算 ---
@@ -752,15 +796,13 @@
         if (count > 10) {
           clearInterval(interval);
           
-          const diceValue = Math.floor(Math.random() * 6) + 1;
-          diceBox.textContent = diceValue;
-          
           const p = players[playerTurnIndex];
+          const diceValue = rollWeightedDice(p.affection, p.maxAffection);
+          diceBox.textContent = diceValue;
           
           let extraSteps = 0;
           let buffLogMsg = [];
 
-          // 2ターン目以降に部活バフ適用（退部しておらず所属している場合のみ）
           if (globalTurnCount >= 2 && p.club !== '未所属（退部済）') {
             if (p.club === 'サッカー部' && diceValue === 1) {
               extraSteps += 2;
@@ -776,8 +818,8 @@
               buffLogMsg.push('管弦楽等効果: 偶数の目で好感度+5');
             } else if (p.club === '合唱部') {
               p.affection = Math.min(p.maxAffection, p.affection + globalTurnCount);
-              p.study += globalTurnCount;
-              buffLogMsg.push(`合唱部効果: 好感度・学力+${globalTurnCount}`);
+              const extraMsg = addStudyPoint(p, globalTurnCount);
+              buffLogMsg.push(`合唱部効果: 好感度+${globalTurnCount}・学力+${globalTurnCount}${extraMsg}`);
             }
           }
 
@@ -803,7 +845,6 @@
       }, 50);
     });
 
-    // ゴールボタン処理
     goalBtn.addEventListener('click', () => {
       const p = players[playerTurnIndex];
       p.isGoal = true;
@@ -812,10 +853,9 @@
 
       let goalMsg = `🎉 ${p.name} さんが ${p.goalRank} 番目でゴールしました！ 🎉`;
 
-      // 合唱部ゴール時特殊効果：好感度ポイントが50以下なら学力+50
       if (p.club === '合唱部' && p.affection <= 50) {
-        p.study += 50;
-        goalMsg += `<br><span style="color: #28a745; font-size: 1rem;">【合唱部ゴール効果】好感度50以下のため 学力+50！</span>`;
+        const extraMsg = addStudyPoint(p, 50);
+        goalMsg += `<br><span style="color: #28a745; font-size: 1rem;">【合唱部ゴール効果】好感度50以下のため 学力+50${extraMsg}！</span>`;
       }
 
       diceResultMsg.innerHTML = `<span style="color: #d97706; font-size: 1.2rem;">${goalMsg}</span>`;
@@ -829,7 +869,6 @@
       }, 2000);
     });
 
-    // 退部ボタン処理
     leaveClubBtn.addEventListener('click', () => {
       const p = players[playerTurnIndex];
       if (p.club === '未所属（退部済）' || p.club === '未所属') {
@@ -846,12 +885,10 @@
       renderResultList();
     });
 
-    // 留年ボタン処理（好感度上限 -25）
     repeatBtn.addEventListener('click', () => {
       const p = players[playerTurnIndex];
       p.maxAffection = Math.max(0, p.maxAffection - 25);
       
-      // 上限低下に合わせて現在値を調整
       if (p.affection > p.maxAffection) {
         p.affection = p.maxAffection;
       }
@@ -863,7 +900,14 @@
     });
 
     function showQuizModal(player) {
-      const qObj = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+      let qIdx;
+      do {
+        qIdx = Math.floor(Math.random() * quizQuestions.length);
+      } while (qIdx === lastQuizIndex && quizQuestions.length > 1);
+      
+      lastQuizIndex = qIdx;
+      const qObj = quizQuestions[qIdx];
+
       quizQuestionText.textContent = `${player.name} への超難問: ${qObj.q}`;
       quizOptionsContainer.innerHTML = '';
 
@@ -875,13 +919,13 @@
         btn.onclick = () => {
           quizModal.classList.add('hidden');
           if (optIdx === qObj.answer) {
-            player.study += 10;
+            const extraMsg = addStudyPoint(player, 10);
             player.affection = Math.min(player.maxAffection, player.affection + 10);
-            diceResultMsg.innerHTML += `<br><span style="color: #28a745;">【超難問見事正解！】学力+10 / 好感度+10</span>`;
+            diceResultMsg.innerHTML += `<br><span style="color: #28a745;">【超難問見事正解！】学力+10${extraMsg} / 好感度+10</span>`;
           } else {
-            player.study = Math.max(0, player.study - 10);
+            const extraMsg = addStudyPoint(player, -10);
             player.affection = 0;
-            diceResultMsg.innerHTML += `<br><span style="color: #d9534f;">【不正解...】学力-10 / 好感度0</span>`;
+            diceResultMsg.innerHTML += `<br><span style="color: #d9534f;">【不正解...】学力-10${extraMsg} / 好感度0</span>`;
           }
           updateDiceTurnView();
           renderResultList();
@@ -894,14 +938,12 @@
     }
 
     function finishTurn() {
-      // 全員ゴールチェック
       const allFinished = players.every(p => p.isGoal);
       if (allFinished) {
         calculateFinalResults();
         return;
       }
 
-      // 次の「未ゴール」のプレイヤーを探す
       let searchCount = 0;
       do {
         playerTurnIndex++;
@@ -922,11 +964,9 @@
       setButtonsState(true);
     }
 
-    // ゲーム完了時：着順ボーナス計算と優勝者発表
     function calculateFinalResults() {
       setButtonsState(false);
 
-      // 着順に応じた学力ボーナス付与
       players.forEach(p => {
         let bonus = 0;
         if (p.goalRank === 1) bonus = 50;
@@ -936,7 +976,6 @@
         p.finalStudy = p.study + bonus;
       });
 
-      // 最高学力ポイントの計算
       let maxScore = -1;
       players.forEach(p => {
         if (p.finalStudy > maxScore) {
@@ -949,7 +988,6 @@
 
       winnerNameText.textContent = `優勝: ${winnerNames} さん！`;
 
-      // ポイント順に並べ替えて結果表示
       const sortedPlayers = [...players].sort((a, b) => b.finalStudy - a.finalStudy);
       finalScoreList.innerHTML = '';
       sortedPlayers.forEach(p => {
@@ -988,8 +1026,8 @@
       const affectionPct = p.maxAffection > 0 ? (p.affection / p.maxAffection) * 100 : 0;
       affectionBar.style.width = `${affectionPct}%`;
 
-      studyVal.textContent = `${p.study}`;
-      const studyPct = Math.min(100, (p.study / 100) * 100);
+      studyVal.textContent = `${p.study} pt`;
+      const studyPct = Math.min(100, (p.study % 100 === 0 && p.study > 0) ? 100 : (p.study % 100));
       studyBar.style.width = `${studyPct}%`;
     }
 
@@ -998,7 +1036,7 @@
       players.forEach((p) => {
         const li = document.createElement('li');
         const goalText = p.isGoal ? ` <span style="color: #d97706;">[${p.goalRank}位GOAL!]</span>` : '';
-        li.innerHTML = `${p.name}（${p.club}）${goalText} - 好感度: ${p.affection}/${p.maxAffection} / 学力: ${p.study}`;
+        li.innerHTML = `${p.name}（${p.club}）${goalText} - 好感度: ${p.affection}/${p.maxAffection} / 学力: ${p.study}pt`;
         resultList.appendChild(li);
       });
     }
@@ -1009,6 +1047,7 @@
       globalTurnCount = 1;
       goalCounter = 0;
       isRolling = false;
+      lastQuizIndex = -1;
       inputPlayer.value = '';
       message1.textContent = '';
       message2.textContent = '';
