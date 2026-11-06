@@ -33,15 +33,15 @@ h2 {
     flex-direction: row;
   }
 }
-input[type="text"] {
+input[type="text"], input[type="number"] {
   width: 100%;
-  padding: 14px 16px;
-  font-size: 1.1rem;
+  padding: 10px 12px;
+  font-size: 1rem;
   border: 2px solid #ccc;
   border-radius: 8px;
   outline: none;
 }
-input[type="text"]:focus {
+input[type="text"]:focus, input[type="number"]:focus {
   border-color: #007bff;
 }
 button {
@@ -174,14 +174,15 @@ li {
   margin-bottom: 6px;
 }
 
-/* 手動ポイント調整ボタン */
-.point-ctrl-btns {
-  display: inline-flex;
+/* 手動ポイント調整コントロール */
+.point-ctrl-area {
+  display: flex;
+  align-items: center;
   gap: 6px;
-  margin-left: 8px;
+  margin-top: 6px;
 }
 .ctrl-btn {
-  padding: 4px 10px;
+  padding: 6px 12px;
   font-size: 0.85rem;
   border-radius: 6px;
   border: none;
@@ -201,6 +202,19 @@ li {
 .ctrl-btn-minus:active {
   background-color: #bd2130;
 }
+.set-btn {
+  background-color: #007bff;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+}
+.set-btn:active {
+  background-color: #0056b3;
+}
 
 .progress-bar-bg {
   width: 100%;
@@ -208,6 +222,7 @@ li {
   background-color: #e0e0e0;
   border-radius: 8px;
   overflow: hidden;
+  margin-top: 6px;
 }
 .progress-bar-fill {
   height: 100%;
