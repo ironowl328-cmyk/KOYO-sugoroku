@@ -228,10 +228,55 @@
       background-color: #28a745;
     }
 
+    /* ルール・部活効果一覧ボックス（常時表示用） */
+    .club-info-box {
+      background-color: #fff8e1;
+      border: 1px solid #ffe082;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    .club-info-box h4 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+      color: #b78103;
+      border-bottom: 1px dashed #ffe082;
+      padding-bottom: 4px;
+    }
+    .club-info-list {
+      margin: 0;
+      padding-left: 20px;
+    }
+    .club-info-list li {
+      font-size: 0.85rem;
+      font-weight: normal;
+      padding: 3px 0;
+      border-bottom: none;
+    }
+
+    /* 確率表示ボックス（常時） */
+    .dice-probability-box {
+      background-color: #e7f1ff;
+      border: 1px solid #b6d4fe;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 16px;
+      text-align: center;
+      font-size: 0.9rem;
+      color: #084298;
+    }
+    .dice-probability-box span {
+      display: inline-block;
+      margin: 0 4px;
+      font-weight: bold;
+    }
+
     /* サイコロエリア */
     .dice-area {
       text-align: center;
-      margin: 20px 0 10px 0;
+      margin: 10px 0 10px 0;
     }
     .dice-box {
       display: inline-flex;
@@ -306,12 +351,29 @@
       background-color: #2c0b0e;
     }
 
+    /* ターン終了ボタン (青紫系) */
+    .end-turn-btn {
+      width: 100%;
+      background-color: #6f42c1;
+      color: #ffffff;
+      font-size: 1.3rem;
+      margin-top: 10px;
+      border: 1px solid #5a32a3;
+      box-shadow: 0 4px 10px rgba(111, 66, 193, 0.3);
+    }
+    .end-turn-btn:hover {
+      background-color: #5a32a3;
+    }
+    .end-turn-btn:active {
+      background-color: #482585;
+    }
+
     .dice-result-msg {
       font-size: 1.05rem;
       font-weight: bold;
       color: #007bff;
       margin-top: 12px;
-      min-height: 54px;
+      min-height: 40px;
       text-align: center;
       line-height: 1.4;
     }
@@ -435,6 +497,21 @@
         <span id="dicePlayerName" style="color: #007bff;"></span> さんの番（<span id="dicePlayerClub" style="color: #555;">未所属</span>）
       </div>
 
+      <!-- 各部活の効果・各種アクション説明一覧（常時表示） -->
+      <div class="club-info-box">
+        <h4>📌 ルール・効果説明</h4>
+        <ul class="club-info-list">
+          <li><strong>好感度ボーナス:</strong> 好感度が高いほど、サイコロで「5」や「6」などの大きい目が出やすくなります！</li>
+          <li><strong>サッカー部:</strong> 出目が「1」のとき、追加で2マス進む</li>
+          <li><strong>野球部:</strong> 出目が「6」のとき、追加で2マス進む</li>
+          <li><strong>ワンゲル部:</strong> 出目が「3」または「4」のとき、追加で1マス進む</li>
+          <li><strong>管弦楽・軽音楽部・ジャズオケ部:</strong> 偶数の目のとき、好感度+5</li>
+          <li><strong>合唱部:</strong> ターン数に応じた好感度・学力が毎ターン上昇（ゴール時好感度50以下なら学力+50）</li>
+          <li><strong>クイズ研究会:</strong> 最初から学力+10。サイコロ後に超難問クイズが発生</li>
+          <li><strong>退部・留年・ゴールボーナス:</strong> 退部で部活効果消失 / 留年で好感度上限-25 / 1〜3位ゴールで学力ボーナス(+50/+30/+10)</li>
+        </ul>
+      </div>
+
       <!-- パラメーター表示領域 -->
       <div class="status-container">
         <!-- 好感度ポイント -->
@@ -454,7 +531,7 @@
           </div>
         </div>
 
-        <!-- 学力ポイント（上限なし） -->
+        <!-- 学力ポイント -->
         <div class="status-item">
           <div class="status-label">
             <div>
@@ -464,12 +541,17 @@
                 <button type="button" class="ctrl-btn ctrl-btn-minus" id="studyMinusBtn">-5</button>
               </span>
             </div>
-            <span id="studyVal">0 pt</span>
+            <span id="studyVal">0 / 100</span>
           </div>
           <div class="progress-bar-bg">
             <div id="studyBar" class="progress-bar-fill study" style="width: 0%;"></div>
           </div>
         </div>
+      </div>
+
+      <!-- サイコロの現在の確率表示ボックス -->
+      <div class="dice-probability-box" id="diceProbBox">
+        <strong>📊 現在のサイコロ確率:</strong> <span id="probText">計算中...</span>
       </div>
 
       <!-- サイコロエリア -->
@@ -479,6 +561,7 @@
         <button type="button" class="goal-btn" id="goalBtn">ゴール！</button>
         <button type="button" class="leave-club-btn" id="leaveClubBtn">退部</button>
         <button type="button" class="repeat-btn" id="repeatBtn">留年</button>
+        <button type="button" class="end-turn-btn" id="endTurnBtn" disabled>ターン終了</button>
       </div>
 
       <div id="diceResultMsg" class="dice-result-msg"></div>
@@ -535,7 +618,6 @@
     let globalTurnCount = 1;
     let isRolling = false;
     let goalCounter = 0;
-    let lastQuizIndex = -1;
 
     const MAX_PLAYERS = 6;
     const MIN_PLAYERS = 2;
@@ -568,9 +650,11 @@
     const goalBtn = document.getElementById('goalBtn');
     const leaveClubBtn = document.getElementById('leaveClubBtn');
     const repeatBtn = document.getElementById('repeatBtn');
+    const endTurnBtn = document.getElementById('endTurnBtn');
     const diceResultMsg = document.getElementById('diceResultMsg');
     const resultList = document.getElementById('resultList');
     const restartBtn = document.getElementById('restartBtn');
+    const probText = document.getElementById('probText');
 
     const affectionPlusBtn = document.getElementById('affectionPlusBtn');
     const affectionMinusBtn = document.getElementById('affectionMinusBtn');
@@ -697,7 +781,6 @@
       if (selectedClub === '管弦楽・軽音楽部・ジャズオケ部') {
         curPlayer.affection = Math.min(curPlayer.maxAffection, curPlayer.affection + 10);
       } else if (selectedClub === 'クイズ研究会') {
-        // 部活決定時の学力変動（退部状態ではないので通常通り）
         curPlayer.study += 10;
       }
 
@@ -720,21 +803,6 @@
       }
     }
 
-    // --- ポイント変更共通関数（退部状態の補正をここに適用） ---
-    function addStudyPoint(player, amount) {
-      let finalAmount = amount;
-      let extraMsg = "";
-
-      // 退部状態（'未所属（退部済）'）のときに学力ポイントが上下（変動）する場合
-      if (player.club === '未所属（退部済）' && amount !== 0) {
-        finalAmount += 10;
-        extraMsg = "（退部ボーナス 学力+10）";
-      }
-
-      player.study = Math.max(0, player.study + finalAmount);
-      return extraMsg;
-    }
-
     // --- ポイント手動変更イベント ---
     affectionPlusBtn.addEventListener('click', () => adjustPoint('affection', 5));
     affectionMinusBtn.addEventListener('click', () => adjustPoint('affection', -5));
@@ -747,32 +815,25 @@
       if (type === 'affection') {
         p.affection = Math.min(p.maxAffection, Math.max(0, p.affection + amount));
       } else {
-        const extraMsg = addStudyPoint(p, amount);
-        if (extraMsg && diceResultMsg) {
-          diceResultMsg.innerHTML = `<span style="color: #721c24;">${extraMsg}</span>`;
-        }
+        p.study = Math.max(0, p.study + amount);
       }
       updateDiceTurnView();
       renderResultList();
     }
 
-    // --- 好感度に応じたサイコロの出目決定 ---
-    function rollWeightedDice(affection, maxAffection) {
-      const ratio = maxAffection > 0 ? affection / maxAffection : 0;
-      const bonusForHigh = ratio * 2;
-      
-      const weights = [
-        1, 
-        1, 
-        1, 
-        1 + bonusForHigh, 
-        1 + bonusForHigh * 1.5, 
-        1 + bonusForHigh * 2
-      ];
+    // --- 好感度に応じた確率の計算用ヘルパー関数 ---
+    function getDiceWeights(affection) {
+      const weights = [];
+      for (let i = 1; i <= 6; i++) {
+        let w = 1 + (affection / 100) * (i - 1) * 1.5;
+        weights.push(w);
+      }
+      return weights;
+    }
 
+    function rollWeightedDice(weights) {
       const totalWeight = weights.reduce((sum, w) => sum + w, 0);
       let randomVal = Math.random() * totalWeight;
-
       for (let i = 0; i < weights.length; i++) {
         if (randomVal < weights[i]) {
           return i + 1;
@@ -786,8 +847,10 @@
     rollBtn.addEventListener('click', () => {
       if (isRolling) return;
       isRolling = true;
-      setButtonsState(false);
-      diceResultMsg.textContent = '';
+      rollBtn.disabled = true;
+
+      const p = players[playerTurnIndex];
+      const weights = getDiceWeights(p.affection);
 
       let count = 0;
       const interval = setInterval(() => {
@@ -796,8 +859,7 @@
         if (count > 10) {
           clearInterval(interval);
           
-          const p = players[playerTurnIndex];
-          const diceValue = rollWeightedDice(p.affection, p.maxAffection);
+          const diceValue = rollWeightedDice(weights);
           diceBox.textContent = diceValue;
           
           let extraSteps = 0;
@@ -818,33 +880,34 @@
               buffLogMsg.push('管弦楽等効果: 偶数の目で好感度+5');
             } else if (p.club === '合唱部') {
               p.affection = Math.min(p.maxAffection, p.affection + globalTurnCount);
-              const extraMsg = addStudyPoint(p, globalTurnCount);
-              buffLogMsg.push(`合唱部効果: 好感度+${globalTurnCount}・学力+${globalTurnCount}${extraMsg}`);
+              p.study += globalTurnCount;
+              buffLogMsg.push(`合唱部効果: 好感度・学力+${globalTurnCount}`);
             }
           }
 
           const totalSteps = diceValue + extraSteps;
-          let resultHTML = `${p.name} さんの出目は「 ${diceValue} 」！<br>`;
+          let resultHTML = `${p.name} さんの出目は「 ${diceValue} 」！（<strong>${totalSteps} マス</strong>進む）`;
           if (buffLogMsg.length > 0) {
-            resultHTML += `<span style="color: #28a745;">【${buffLogMsg.join(' / ')}】</span><br>`;
+            resultHTML += `<br><span style="color: #28a745;">【${buffLogMsg.join(' / ')}】</span>`;
           }
-          resultHTML += `<strong>${totalSteps} マス</strong> 進みます！`;
+          
           diceResultMsg.innerHTML = resultHTML;
 
           updateDiceTurnView();
           renderResultList();
 
+          endTurnBtn.disabled = false;
+
           setTimeout(() => {
             if (globalTurnCount >= 2 && p.club === 'クイズ研究会') {
               showQuizModal(p);
-            } else {
-              finishTurn();
             }
-          }, 1500);
+          }, 500);
         }
       }, 50);
     });
 
+    // ゴールボタン処理
     goalBtn.addEventListener('click', () => {
       const p = players[playerTurnIndex];
       p.isGoal = true;
@@ -854,21 +917,20 @@
       let goalMsg = `🎉 ${p.name} さんが ${p.goalRank} 番目でゴールしました！ 🎉`;
 
       if (p.club === '合唱部' && p.affection <= 50) {
-        const extraMsg = addStudyPoint(p, 50);
-        goalMsg += `<br><span style="color: #28a745; font-size: 1rem;">【合唱部ゴール効果】好感度50以下のため 学力+50${extraMsg}！</span>`;
+        p.study += 50;
+        goalMsg += `<br><span style="color: #28a745; font-size: 1rem;">【合唱部ゴール効果】好感度50以下のため 学力+50！</span>`;
       }
 
       diceResultMsg.innerHTML = `<span style="color: #d97706; font-size: 1.2rem;">${goalMsg}</span>`;
       
       updateDiceTurnView();
       renderResultList();
-      setButtonsState(false);
-
-      setTimeout(() => {
-        finishTurn();
-      }, 2000);
+      goalBtn.disabled = true;
+      rollBtn.disabled = true;
+      endTurnBtn.disabled = false;
     });
 
+    // 退部ボタン処理
     leaveClubBtn.addEventListener('click', () => {
       const p = players[playerTurnIndex];
       if (p.club === '未所属（退部済）' || p.club === '未所属') {
@@ -885,6 +947,7 @@
       renderResultList();
     });
 
+    // 留年ボタン処理
     repeatBtn.addEventListener('click', () => {
       const p = players[playerTurnIndex];
       p.maxAffection = Math.max(0, p.maxAffection - 25);
@@ -899,45 +962,8 @@
       renderResultList();
     });
 
-    function showQuizModal(player) {
-      let qIdx;
-      do {
-        qIdx = Math.floor(Math.random() * quizQuestions.length);
-      } while (qIdx === lastQuizIndex && quizQuestions.length > 1);
-      
-      lastQuizIndex = qIdx;
-      const qObj = quizQuestions[qIdx];
-
-      quizQuestionText.textContent = `${player.name} への超難問: ${qObj.q}`;
-      quizOptionsContainer.innerHTML = '';
-
-      qObj.options.forEach((optText, optIdx) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'quiz-option-btn';
-        btn.textContent = `${optIdx + 1}. ${optText}`;
-        btn.onclick = () => {
-          quizModal.classList.add('hidden');
-          if (optIdx === qObj.answer) {
-            const extraMsg = addStudyPoint(player, 10);
-            player.affection = Math.min(player.maxAffection, player.affection + 10);
-            diceResultMsg.innerHTML += `<br><span style="color: #28a745;">【超難問見事正解！】学力+10${extraMsg} / 好感度+10</span>`;
-          } else {
-            const extraMsg = addStudyPoint(player, -10);
-            player.affection = 0;
-            diceResultMsg.innerHTML += `<br><span style="color: #d9534f;">【不正解...】学力-10${extraMsg} / 好感度0</span>`;
-          }
-          updateDiceTurnView();
-          renderResultList();
-          setTimeout(finishTurn, 1500);
-        };
-        quizOptionsContainer.appendChild(btn);
-      });
-
-      quizModal.classList.remove('hidden');
-    }
-
-    function finishTurn() {
+    // ターン終了ボタン処理
+    endTurnBtn.addEventListener('click', () => {
       const allFinished = players.every(p => p.isGoal);
       if (allFinished) {
         calculateFinalResults();
@@ -958,14 +984,48 @@
         searchCount++;
       } while (players[playerTurnIndex].isGoal && searchCount <= players.length);
 
+      diceBox.textContent = '?';
+      diceResultMsg.textContent = '';
       updateDiceTurnView();
       
       isRolling = false;
-      setButtonsState(true);
+      setButtonsState(!players[playerTurnIndex].isGoal);
+    });
+
+    function showQuizModal(player) {
+      const qObj = quizQuestions[Math.floor(Math.random() * quizQuestions.length)];
+      quizQuestionText.textContent = `${player.name} への超難問: ${qObj.q}`;
+      quizOptionsContainer.innerHTML = '';
+
+      qObj.options.forEach((optText, optIdx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'quiz-option-btn';
+        btn.textContent = `${optIdx + 1}. ${optText}`;
+        btn.onclick = () => {
+          quizModal.classList.add('hidden');
+          if (optIdx === qObj.answer) {
+            player.study += 10;
+            player.affection = Math.min(player.maxAffection, player.affection + 10);
+            diceResultMsg.innerHTML += `<br><span style="color: #28a745;">【超難問見事正解！】学力+10 / 好感度+10</span>`;
+          } else {
+            player.study = Math.max(0, player.study - 10);
+            player.affection = 0;
+            diceResultMsg.innerHTML += `<br><span style="color: #d9534f;">【不正解...】学力-10 / 好感度0</span>`;
+          }
+          updateDiceTurnView();
+          renderResultList();
+          endTurnBtn.disabled = false;
+        };
+        quizOptionsContainer.appendChild(btn);
+      });
+
+      quizModal.classList.add('hidden');
     }
 
     function calculateFinalResults() {
       setButtonsState(false);
+      endTurnBtn.disabled = true;
 
       players.forEach(p => {
         let bonus = 0;
@@ -1014,6 +1074,7 @@
       goalBtn.disabled = !enabled;
       leaveClubBtn.disabled = !enabled;
       repeatBtn.disabled = !enabled;
+      endTurnBtn.disabled = true;
     }
 
     function updateDiceTurnView() {
@@ -1026,9 +1087,16 @@
       const affectionPct = p.maxAffection > 0 ? (p.affection / p.maxAffection) * 100 : 0;
       affectionBar.style.width = `${affectionPct}%`;
 
-      studyVal.textContent = `${p.study} pt`;
-      const studyPct = Math.min(100, (p.study % 100 === 0 && p.study > 0) ? 100 : (p.study % 100));
+      studyVal.textContent = `${p.study}`;
+      const studyPct = Math.min(100, (p.study / 100) * 100);
       studyBar.style.width = `${studyPct}%`;
+
+      // 確率の常時計算と表示更新
+      const weights = getDiceWeights(p.affection);
+      const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+      const probabilities = weights.map(w => ((w / totalWeight) * 100).toFixed(1));
+      
+      probText.innerHTML = `1: ${probabilities[0]}% | 2: ${probabilities[1]}% | 3: ${probabilities[2]}% | 4: ${probabilities[3]}% | 5: ${probabilities[4]}% | 6: ${probabilities[5]}%`;
     }
 
     function renderResultList() {
@@ -1036,7 +1104,7 @@
       players.forEach((p) => {
         const li = document.createElement('li');
         const goalText = p.isGoal ? ` <span style="color: #d97706;">[${p.goalRank}位GOAL!]</span>` : '';
-        li.innerHTML = `${p.name}（${p.club}）${goalText} - 好感度: ${p.affection}/${p.maxAffection} / 学力: ${p.study}pt`;
+        li.innerHTML = `${p.name}（${p.club}）${goalText} - 好感度: ${p.affection}/${p.maxAffection} / 学力: ${p.study}`;
         resultList.appendChild(li);
       });
     }
@@ -1047,7 +1115,6 @@
       globalTurnCount = 1;
       goalCounter = 0;
       isRolling = false;
-      lastQuizIndex = -1;
       inputPlayer.value = '';
       message1.textContent = '';
       message2.textContent = '';
